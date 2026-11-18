@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FPOCAST 2.0 – Live Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --dark:#14301F; --dark2:#1C3F2A; --paper:#F6F3EC; --sage:#E4ECE5; --leaf:#1F7A4D; --leaf2:#2E9A63;
+  --mint:#A9D9BB; --soil:#A5621A; --amber:#C98A2B; --red:#B23A2E; --ink:#1B2A21; --body:#46584C;
+  --muted:#6E8075; --line:#D5DED7; --card:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.5}
+a{color:inherit}
+.mono{font-family:'JetBrains Mono',monospace}
+.wrap{max-width:1320px;margin:0 auto;padding:0 28px}
+
+/* ---------- nav ---------- */
+.nav{position:sticky;top:0;z-index:50;background:var(--dark);color:var(--paper);border-bottom:1px solid #0c1f14}
+.nav .wrap{display:flex;align-items:center;gap:28px;height:66px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.3px;text-decoration:none;white-space:nowrap}
+.brand .lg{width:34px;height:34px;border-radius:9px;background:var(--paper);display:grid;place-items:center}
+.brand span{color:var(--mint)}
+.links{display:flex;gap:4px;flex:1}
+.links a{text-decoration:none;padding:8px 14px;border-radius:9px;font-weight:500;font-size:15px;color:#C9DDD0;white-space:nowrap}
+.links a:hover{background:var(--dark2);color:#fff}
+.links a.on{background:var(--dark2);color:#fff;box-shadow:inset 0 -2px 0 var(--mint)}
+.gstat{display:flex;gap:8px;align-items:center;font-size:13px;white-space:nowrap}
+.gpill{background:var(--dark2);padding:6px 11px;border-radius:20px;display:flex;align-items:center;gap:7px;color:#DCEBE1}
+.sim{background:var(--amber);color:#1b1205;font-weight:700;font-size:11px;letter-spacing:.6px;padding:4px 8px;border-radius:6px}
+.burger{display:none;background:none;border:none;color:#fff;font-size:26px;cursor:pointer}
+
+/* ---------- common ---------- */
+.page{display:none;animation:fade .25s ease}
+.page.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ph{padding:34px 0 20px}
+.ph h1{font-size:34px;letter-spacing:-.6px;line-height:1.15}
+.ph p{color:var(--body);margin-top:6px;max-width:780px}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--leaf)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}
+.card h3{font-size:18px;margin-bottom:4px}
+.card .sub{color:var(--muted);font-size:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border:none;border-radius:11px;background:var(--leaf);color:#fff;font:700 15px 'DM Sans',sans-serif;cursor:pointer;text-decoration:none;transition:.15s}
+.btn:hover{background:#17603c}
+.btn:disabled{background:#A8BFB1;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--leaf);border:1.5px solid var(--leaf)}
+.btn.ghost:hover{background:#E9F3EC}
+.btn.light{background:var(--mint);color:var(--dark)}
+.btn.block{width:100%}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#B9C5BD;flex-shrink:0}
+.dot.ok{background:#4CC27F;box-shadow:0 0 0 3px rgba(76,194,127,.22)}
+.dot.wait{background:var(--amber);animation:pulse 1s infinite}
+.dot.bad{background:var(--red)}
+@keyframes pulse{50%{opacity:.3}}
+.kv{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #EEF2EF;font-size:15px}
+.kv:last-child{border-bottom:none}
+.kv span:first-child{color:var(--muted)}
+.kv b{font-weight:600;display:flex;align-items:center;gap:7px}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px}
+.b-low{background:#DDF1E4;color:#17603c}
+.b-mod{background:#FBEBD0;color:#7A4A0C}
+.b-high{background:#F6DAD6;color:#8E2A20}
+.log{background:#0F1D15;color:#A7E3BF;font:13px/1.65 'JetBrains Mono',monospace;border-radius:12px;padding:14px 16px;height:230px;overflow-y:auto}
+.log .m{color:#8DBBFF}.log .e{color:#FFB4A8}.log .g{color:#6E8E7B}.log .y{color:#F2C879}
+.prog{height:10px;background:#E3EBE6;border-radius:10px;overflow:hidden}
+.prog div{height:100%;width:0;background:linear-gradient(90deg,var(--leaf2),var(--leaf));transition:width .25s}
+.grid{display:grid;gap:20px}
+.note{font-size:13px;color:var(--muted)}
+input,select{font:500 15px 'DM Sans',sans-serif;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);width:100%}
+input:focus,select:focus{outline:none;border-color:var(--leaf2)}
+label.l{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+
+/* ---------- home ---------- */
+.hero{background:var(--dark);color:var(--paper);padding:70px 0 80px;position:relative;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:50px;align-items:center}
+.hero h1{font-size:64px;line-height:1.02;letter-spacing:-2px;font-weight:800}
+.hero h1 span{color:var(--mint)}
+.hero p.lead{font-size:20px;color:#C9DDD0;margin:20px 0 30px;max-width:560px}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+.hero .eyebrow{color:var(--mint);margin-bottom:16px}
+.heromap{background:#0F2418;border:1px solid #2A4A36;border-radius:20px;padding:16px}
+.heromap svg{width:100%;height:auto;display:block}
+.heromap .cap{display:flex;justify-content:space-between;font-size:13px;color:#8FB09C;margin-top:10px}
+.sec{padding:70px 0}
+.sec.alt{background:var(--sage)}
+.sec h2{font-size:40px;letter-spacing:-1px;line-height:1.1;margin:8px 0 14px;max-width:820px}
+.sec .intro{color:var(--body);font-size:18px;max-width:760px;margin-bottom:34px}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g2{grid-template-columns:1fr 1fr}
+.tagc{font-size:12px;font-weight:700;letter-spacing:1.2px;color:var(--soil);margin-bottom:8px}
+.costband{margin-top:22px;background:var(--dark);color:var(--paper);border-radius:16px;padding:20px 26px;font-size:18px}
+table.t{width:100%;border-collapse:collapse;font-size:15px;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+table.t th{text-align:left;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--leaf);background:#F3F7F4;padding:12px 14px;border-bottom:1px solid var(--line)}
+table.t td{padding:12px 14px;border-bottom:1px solid #EEF2EF;vertical-align:top}
+table.t tr:last-child td{border-bottom:none}
+.stepn{width:40px;height:40px;border-radius:12px;background:var(--leaf);color:#fff;display:grid;place-items:center;font-weight:800;margin-bottom:14px}
+.statement{background:var(--dark);color:var(--paper);border-radius:22px;padding:44px;display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:center}
+.statement .big{font-size:44px;font-weight:800;line-height:1.08;letter-spacing:-1px}
+.statement .big span{color:var(--mint)}
+.rangebar{position:relative;height:84px;margin-top:10px}
+.layer{display:flex;gap:20px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 20px;margin-bottom:10px}
+.layer.hot{background:#DCEEDF;border-color:var(--leaf)}
+.layer b{width:250px;flex-shrink:0}
+.layer span{color:var(--body)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#fff;border:1px solid var(--line);padding:6px 13px;border-radius:20px;font-size:14px;font-weight:500}
+.person{display:flex;gap:12px;align-items:center}
+.av{width:44px;height:44px;border-radius:50%;background:var(--leaf);color:#fff;display:grid;place-items:center;font-weight:700;flex-shrink:0}
+footer{background:var(--dark);color:#8FB09C;padding:28px 0;font-size:14px;margin-top:0}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+
+/* ---------- selector ---------- */
+.sel-layout{display:grid;grid-template-columns:1fr 400px;gap:24px;padding-bottom:50px;align-items:start}
+.conn{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}
+.connstat{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+.cs{background:#F6F9F7;border:1px solid #E5ECE7;border-radius:12px;padding:12px 14px}
+.cs small{display:block;color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.cs b{display:flex;align-items:center;gap:7px;margin-top:3px;font-size:15px}
+.models{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:16px}
+.model{background:#fff;border:2px solid var(--line);border-radius:16px;padding:18px;cursor:pointer;transition:.15s;position:relative}
+.model:hover{border-color:#A9CDB6;transform:translateY(-2px)}
+.model.sel{border-color:var(--leaf);background:#F0F8F2;box-shadow:0 8px 24px -14px rgba(31,122,77,.6)}
+.model.dis{opacity:.5;pointer-events:none}
+.model .top{display:flex;gap:14px;align-items:center}
+.model .ic{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;font-size:30px;flex-shrink:0}
+.model h3{font-size:20px}
+.model .task{color:var(--muted);font-size:14px}
+.model .specs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.model .specs div{background:#F4F7F5;border-radius:9px;padding:7px 10px;font-size:13px}
+.model .specs small{display:block;color:var(--muted);font-size:11px}
+.model .cls{margin-top:10px;font-size:13px;color:var(--body)}
+.model .loadedtag{position:absolute;top:14px;right:14px;background:var(--leaf);color:#fff;font-size:11px;font-weight:700;padding:4px 9px;border-radius:20px;display:none}
+.model.loaded .loadedtag{display:block}
+.side{position:sticky;top:86px;display:flex;flex-direction:column;gap:16px}
+.stage{display:flex;align-items:center;gap:12px;padding:9px 0;color:var(--muted);font-size:15px}
+.stage .s{width:22px;height:22px;border-radius:50%;border:2px solid #CDD8D1;display:grid;place-items:center;font-size:12px;flex-shrink:0}
+.stage.run{color:var(--ink);font-weight:600}
+.stage.run .s{border-color:var(--amber);border-top-color:transparent;animation:spin .8s linear infinite}
+.stage.done{color:var(--ink)}
+.stage.done .s{background:var(--leaf2);border-color:var(--leaf2);color:#fff}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ready{display:none;background:#E5F4EA;border:1px solid #B9DEC7;border-radius:12px;padding:14px;margin-top:12px}
+
+/* ---------- console ---------- */
+.con-layout{display:grid;grid-template-columns:1.45fr 1fr;gap:22px;padding-bottom:50px;align-items:start}
+.tele{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.tl{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+.tl small{color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.tl b{display:block;font-size:24px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.tl i{font-style:normal;font-size:13px;color:var(--muted);font-weight:500}
+.mapcard{background:#0F2418;border-radius:16px;padding:14px;position:relative}
+.mapcard svg{width:100%;height:auto;display:block}
+.maphud{position:absolute;top:24px;left:24px;background:rgba(15,36,24,.85);color:#DCEBE1;border:1px solid #2A4A36;border-radius:10px;padding:8px 12px;font-size:13px}
+.empty{border:2px dashed var(--line);border-radius:14px;padding:20px;text-align:center;color:var(--muted)}
+
+/* ---------- dashboard ---------- */
+.dbar{display:flex;gap:14px;align-items:end;flex-wrap:wrap;justify-content:space-between}
+.dbar .ctl{display:flex;gap:12px;align-items:end}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:18px 0 22px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+.kpi small{color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.kpi b{display:block;font-size:28px;letter-spacing:-.5px;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi i{font-style:normal;font-size:13px;color:var(--body)}
+.dgrid{display:grid;grid-template-columns:1.25fr 1fr;gap:20px;margin-bottom:20px}
+.mapwrap svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:16px;align-items:center;font-size:13px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+.legend span{white-space:nowrap}
+.legend .grad{width:120px;height:10px;border-radius:5px;background:linear-gradient(90deg,#E6F0E1,#1F7A4D)}
+.gradebar{display:flex;height:34px;border-radius:9px;overflow:hidden;margin:10px 0 8px}
+.gradebar div{display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700;min-width:0}
+.gl{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--body)}
+.gl span{display:flex;align-items:center;gap:6px}
+.gl i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.fan svg{width:100%;height:auto;display:block}
+.calc{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:14px 0}
+.result{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:6px}
+.result div{background:#F4F7F5;border-radius:12px;padding:12px 14px}
+.result small{display:block;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.result b{font-size:22px;font-variant-numeric:tabular-nums}
+input[type=range]{padding:0;border:none;accent-color:var(--leaf);height:28px}
+.ftable{max-height:420px;overflow-y:auto;border-radius:14px;border:1px solid var(--line)}
+.ftable table.t{border:none;border-radius:0}
+.ftable tr{cursor:pointer}
+.ftable tr:hover td{background:#F4F8F5}
+.ftable tr.selr td{background:#E5F4EA}
+.ftable th{position:sticky;top:0}
+.fdetail h3{font-size:22px}
+.flag{color:var(--soil);font-weight:700}
+
+@media (max-width:1100px){
+  .hero .wrap,.sel-layout,.con-layout,.dgrid,.statement{grid-template-columns:1fr}
+  .side{position:static}
+  .kpis{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:760px){
+  .links{display:none;position:absolute;top:66px;left:0;right:0;background:var(--dark);flex-direction:column;padding:10px 16px 16px}
+  .links.open{display:flex}
+  .burger{display:block;margin-left:auto}
+  .gstat .gpill{display:none}
+  .hero h1{font-size:42px}
+  .g3,.g4,.g2,.models,.calc,.result{grid-template-columns:1fr}
+  .kpis{grid-template-columns:1fr 1fr}
+  .tele,.connstat{grid-template-columns:1fr 1fr}
+  .sec h2{font-size:30px}
+  .statement{padding:28px}.statement .big{font-size:32px}
+  .layer{flex-direction:column;align-items:flex-start;gap:4px}.layer b{width:auto}
+  .wrap{padding:0 16px}
+  .conn{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#home">
+      <span class="lg"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 21V11" stroke="#1F7A4D" stroke-width="2.2" stroke-linecap="round"/><path d="M12 12C12 7 8 4 4 4c0 5 3 8 8 8Z" fill="#2E9A63"/><path d="M12 14c0-4 3-7 8-7 0 4-3 7-8 7Z" fill="#1F7A4D"/></svg></span>
+      FPOCAST <span>2.0</span>
+    </a>
+    <nav class="links" id="links">
+      <a href="#home" data-p="home">Home</a>
+      <a href="#selector" data-p="selector">Model Selector</a>
+      <a href="#console" data-p="console">Drone Console</a>
+      <a href="#dashboard" data-p="dashboard">Forecast Dashboard</a>
+    </nav>
+    <div class="gstat">
+      <span class="gpill"><i class="dot" id="gDot"></i><span id="gDrone">Drone not connected</span></span>
+      <span class="gpill" id="gModelPill">Model: <b id="gModel">none</b></span>
+      <span class="sim" title="Server, drone and data are simulated in this page">SIMULATION</span>
+    </div>
+    <button class="burger" id="burger" aria-label="Menu">☰</button>
+  </div>
+</header>
+
+<!-- ======================= HOME ======================= -->
+<div class="page" id="p-home">
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">Tech4Bharat · Problem Statement 6.4</p>
+        <h1>Know your harvest <span>before</span> you sign the contract.</h1>
+        <p class="lead">FPOCAST 2.0 uses drone surveys and AI to forecast how much an FPO will harvest, what grade it will be and when — with an honest confidence range, so buyers and FPOs can plan supply they can trust.</p>
+        <div class="cta">
+          <a class="btn light" href="#selector">Launch the live demo →</a>
+          <a class="btn ghost" style="color:var(--mint);border-color:var(--mint)" href="#dashboard">See a forecast</a>
+        </div>
+      </div>
+      <div class="heromap">
+        <svg id="heroMap" viewBox="0 0 640 420" aria-label="Drone survey over 24 member fields"></svg>
+        <div class="cap"><span>Survey of 24 member fields · 40 m altitude</span><span class="mono">simulated</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <p class="eyebrow">The problem</p>
+      <h2>Processors can’t plan around supply that FPOs can’t predict</h2>
+      <p class="intro">Farmer Producer Organisations make supply commitments from rough estimates. Buyers find out the real quantity and grade only when produce reaches the collection point.</p>
+      <div class="grid g3">
+        <div class="card"><p class="tagc">HOW MUCH?</p><h3>Volume is guessed</h3><p class="sub">Commitments rest on estimates made at sowing, from acreage and last season.</p></div>
+        <div class="card"><p class="tagc">WHAT GRADE?</p><h3>Quality shows up late</h3><p class="sub">Grade becomes clear only at the collection point — after the contract is signed.</p></div>
+        <div class="card"><p class="tagc">WHEN?</p><h3>Harvest timing shifts</h3><p class="sub">Weather and irrigation move the harvest window, and logistics with it.</p></div>
+      </div>
+      <div class="costband"><b>What it costs:</b> broken contracts, penalties, distress sales of surplus, and buyers who quietly go elsewhere.</div>
+    </div>
+  </section>
+
+  <section class="sec alt">
+    <div class="wrap">
+      <p class="eyebrow">Evidence</p>
+      <h2>Five real cases, one pattern</h2>
+      <p class="intro">Different crops and states, same root cause: supply was committed without credible information on quantity, grade and timing.</p>
+      <div style="overflow-x:auto">
+      <table class="t">
+        <tr><th style="width:26%">Case</th><th style="width:40%">What happened</th><th>What FPOCAST adds</th></tr>
+        <tr><td><b>Nabha, Punjab</b> · potato, 2026</td><td>Farmers allege only 600 of 1,200 contracted bags were bought (under investigation)</td><td>Credible quantity and quality estimate before committing</td></tr>
+        <tr><td><b>Bina Krishak PC, MP</b> · soybean</td><td>₹10,000 deducted on one of two trucks, with no reason given</td><td>Documented grade distribution and field records</td></tr>
+        <tr><td><b>IIMA case</b> · processing potato</td><td>About 20% of produce rejected for small size</td><td>Marketable quantity, not just total harvest</td></tr>
+        <tr><td><b>Indiagro FPC, Gujarat</b> · onion</td><td>Aggregating perishable produce across two districts</td><td>Harvest-window and aggregated supply forecast</td></tr>
+        <tr><td><b>MANAGE study</b> · Maharashtra FPCs</td><td>Higher rejection reported by 17–23% of respondents in two categories</td><td>Quality forecasting and farmer-level records</td></tr>
+      </table>
+      </div>
+      <p class="note" style="margin-top:10px">Sources: The Tribune (Feb 2026), Down To Earth, IIMA case studies, MANAGE impact assessment of FPCs in Maharashtra.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <p class="eyebrow">How it works</p>
+      <h2>From a drone flight to a contract decision</h2>
+      <p class="intro">One drone platform serves every crop. The operator picks the crop model, the drone surveys the fields, and the server turns images into a supply forecast.</p>
+      <div class="grid g4">
+        <div class="card"><div class="stepn">1</div><h3>Pick the crop model</h3><p class="sub">In the Model Selector. The server sends it to the drone’s Raspberry Pi 5, which loads and tests it.</p></div>
+        <div class="card"><div class="stepn">2</div><h3>Survey the fields</h3><p class="sub">The drone flies a lawnmower path, capturing GPS-tagged images. Crop vision runs on board.</p></div>
+        <div class="card"><div class="stepn">3</div><h3>Forecast on the server</h3><p class="sub">Yield, quality grade, harvest time and uncertainty — per field, then added up for the FPO.</p></div>
+        <div class="card"><div class="stepn">4</div><h3>Check the contract</h3><p class="sub">Compare forecast supply with a buyer’s quantity, grade and date. The FPO board decides.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec alt">
+    <div class="wrap">
+      <div class="statement">
+        <div>
+          <p class="eyebrow" style="color:var(--mint)">Key innovation · uncertainty-aware forecasting</p>
+          <p class="big" style="margin-top:12px">Not “100 tonnes.”<br><span>100 tonnes, 85–115, with the risk stated.</span></p>
+          <p style="color:#C9DDD0;margin-top:16px;font-size:17px">Every forecast comes with a calibrated 90% range and the probability of falling short of what the buyer needs — and accounts for shared weather risk across nearby farms.</p>
+        </div>
+        <div>
+          <svg viewBox="0 0 420 170" width="100%" aria-label="Forecast range 85 to 115 tonnes versus buyer need of 110 tonnes">
+            <defs><linearGradient id="hg" x1="0" x2="1"><stop offset="0" stop-color="#A9D9BB" stop-opacity=".15"/><stop offset=".5" stop-color="#A9D9BB" stop-opacity=".75"/><stop offset="1" stop-color="#A9D9BB" stop-opacity=".15"/></linearGradient></defs>
+            <line x1="20" y1="110" x2="400" y2="110" stroke="#4E6E5A" stroke-width="2"/>
+            <rect x="80" y="70" width="240" height="40" rx="8" fill="url(#hg)"/>
+            <line x1="200" y1="58" x2="200" y2="122" stroke="#F6F3EC" stroke-width="3"/>
+            <line x1="296" y1="40" x2="296" y2="130" stroke="#E7A24A" stroke-width="3" stroke-dasharray="6 5"/>
+            <text x="200" y="50" fill="#F6F3EC" font-size="14" text-anchor="middle" font-family="DM Sans" font-weight="700">100 t expected</text>
+            <text x="80" y="148" fill="#A9D9BB" font-size="13" text-anchor="middle" font-family="DM Sans">85 t</text>
+            <text x="320" y="148" fill="#A9D9BB" font-size="13" text-anchor="middle" font-family="DM Sans">115 t</text>
+            <text x="296" y="30" fill="#E7A24A" font-size="13" text-anchor="middle" font-family="DM Sans" font-weight="700">buyer needs 110 t</text>
+            <text x="200" y="168" fill="#8FB09C" font-size="12" text-anchor="middle" font-family="DM Sans">illustrative · 90% forecast range</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <p class="eyebrow">Architecture</p>
+      <h2>Six layers, built on our patent-filed drone platform</h2>
+      <p class="intro">FPOCAST reuses the drone, server and app structure of SAADAXA, our patent-filed Drone–Server–App system. Disaster-specific parts are replaced with agricultural intelligence.</p>
+      <div class="layer"><b>1 · Data acquisition</b><span>Drone RGB + GPS images · farmer records · weather · historical yield and rejections</span></div>
+      <div class="layer"><b>2 · Processing</b><span>Image preprocessing · GPS field association · cleaning · feature extraction</span></div>
+      <div class="layer hot"><b>3 · AI intelligence engine</b><span>Crop vision · yield · quality grade · harvest time · uncertainty and risk</span></div>
+      <div class="layer hot"><b>4 · Supply intelligence</b><span>FPO aggregation · grade-wise supply · buyer matching · contract feasibility</span></div>
+      <div class="layer"><b>5 · Backend</b><span>FastAPI · PostgreSQL + PostGIS · image storage · MLflow model tracking</span></div>
+      <div class="layer"><b>6 · Decision support</b><span>Field, FPO and buyer reports for FPO management</span></div>
+      <p class="eyebrow" style="margin:34px 0 12px">Tech stack</p>
+      <div class="chips">
+        <span class="chip">Raspberry Pi 5</span><span class="chip">Pixhawk flight controller</span><span class="chip">GPS</span><span class="chip">RGB camera</span><span class="chip">YOLOv8n-seg</span><span class="chip">ONNX Runtime</span><span class="chip">OpenCV</span><span class="chip">PyTorch</span><span class="chip">XGBoost / LightGBM</span><span class="chip">Quantile regression</span><span class="chip">Conformal prediction</span><span class="chip">FastAPI</span><span class="chip">PostgreSQL + PostGIS</span><span class="chip">Docker</span><span class="chip">MLflow</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec alt">
+    <div class="wrap">
+      <p class="eyebrow">Team</p>
+      <h2>Cambridge Institute of Technology, Bengaluru</h2>
+      <div class="grid g4" style="margin-top:24px">
+        <div class="card person"><div class="av">SU</div><div><b>Shreya Upadhyay</b><p class="sub">CSE (Data Science)</p></div></div>
+        <div class="card person"><div class="av">GV</div><div><b>Gouri Vast</b><p class="sub">ECE</p></div></div>
+        <div class="card person"><div class="av">AR</div><div><b>Archisman Rana</b><p class="sub">AIML</p></div></div>
+        <div class="card person"><div class="av">SS</div><div><b>Sankarshan V Sastry</b><p class="sub">ECE</p></div></div>
+      </div>
+      <p class="sub" style="margin-top:16px;color:var(--body)">Mentors: Dr. Ajay Kumar Dwivedi, Dr. Vivek Singh, Dr. Nagesh Kallollu Narayanaswamy (Dept. of ECE)</p>
+      <div style="margin-top:30px"><a class="btn" href="#selector">Try the live demo →</a></div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= SELECTOR ======================= -->
+<div class="page" id="p-selector">
+  <div class="wrap">
+    <div class="ph">
+      <p class="eyebrow">Step 1 · Model Selector</p>
+      <h1>Choose the crop model for today’s survey</h1>
+      <p>Connect to the ground server, pick a crop, and the server sends that model to the drone’s Raspberry Pi 5. The Pi verifies, loads and test-runs it before the flight.</p>
+    </div>
+    <div class="sel-layout">
+      <div>
+        <div class="card">
+          <h3>Ground server</h3>
+          <p class="sub" style="margin-bottom:14px">The laptop or ground station on the field Wi-Fi.</p>
+          <div class="conn">
+            <div><label class="l" for="ip">Server address</label><input id="ip" class="mono" value="192.168.4.1:8000" spellcheck="false"></div>
+            <button class="btn" id="connectBtn">Connect</button>
+          </div>
+          <p class="note" id="ipErr" style="color:var(--red);display:none;margin-top:8px"></p>
+          <div class="connstat">
+            <div class="cs"><small>Server</small><b id="cSrv"><i class="dot"></i>—</b></div>
+            <div class="cs"><small>Drone (Pi 5)</small><b id="cPi"><i class="dot"></i>—</b></div>
+            <div class="cs"><small>GPS</small><b id="cGps">—</b></div>
+            <div class="cs"><small>Battery</small><b id="cBat">—</b></div>
+          </div>
+        </div>
+
+        <div style="margin-top:26px;display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap">
+          <div><h3 style="font-size:20px">Crop models on the server</h3><p class="note" id="modelsNote">Connect to load the list from <span class="mono">GET /models</span>.</p></div>
+        </div>
+        <div class="models" id="modelList"></div>
+      </div>
+
+      <div class="side">
+        <div class="card">
+          <h3>Load onto drone</h3>
+          <p class="sub" id="selName">No model selected</p>
+          <button class="btn block" id="loadBtn" style="margin-top:14px" disabled>Select a model</button>
+          <div style="margin-top:16px">
+            <div class="prog"><div id="bar"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:5px"><span id="stageText">Idle</span><span id="pct">0%</span></div>
+          </div>
+          <div style="margin-top:8px">
+            <div class="stage" id="s1"><div class="s"></div>Server sends model file to Pi</div>
+            <div class="stage" id="s2"><div class="s"></div>Pi verifies checksum (SHA-256)</div>
+            <div class="stage" id="s3"><div class="s"></div>Pi loads model into memory</div>
+            <div class="stage" id="s4"><div class="s"></div>Test run on a sample image</div>
+          </div>
+          <div class="ready" id="readyBox">
+            <b style="color:#17603c">✓ <span id="rName"></span> ready on drone</b>
+            <div class="kv"><span>Load time</span><b id="rTime">—</b></div>
+            <div class="kv"><span>Test inference</span><b id="rInf">—</b></div>
+            <a class="btn block" href="#console" style="margin-top:10px">Next: start the survey →</a>
+          </div>
+        </div>
+        <div>
+          <p class="eyebrow" style="margin-bottom:8px">API log</p>
+          <div class="log" id="log1"><span class="g"># requests between this page, the server and the Pi</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= CONSOLE ======================= -->
+<div class="page" id="p-console">
+  <div class="wrap">
+    <div class="ph">
+      <p class="eyebrow">Step 2 · Drone Console</p>
+      <h1>Live telemetry and field survey</h1>
+      <p>Watch the drone fly the survey with the loaded crop model. Crop vision runs on the Pi; images and detections go to the ground server for forecasting.</p>
+    </div>
+    <div class="tele" id="tele">
+      <div class="tl"><small>Flight mode</small><b id="tMode">—</b></div>
+      <div class="tl"><small>Battery</small><b id="tBat">—</b><i id="tVolt"></i></div>
+      <div class="tl"><small>GPS</small><b id="tGps">—</b><i id="tHdop"></i></div>
+      <div class="tl"><small>Altitude</small><b id="tAlt">—</b><i id="tSpd"></i></div>
+    </div>
+    <div class="con-layout" style="margin-top:18px">
+      <div>
+        <div class="mapcard">
+          <svg id="conMap" viewBox="0 0 640 420" aria-label="Live map of the drone survey path over member fields"></svg>
+          <div class="maphud" id="hud">Waiting for survey</div>
+        </div>
+        <div style="margin-top:16px">
+          <p class="eyebrow" style="margin-bottom:8px">Drone log</p>
+          <div class="log" id="log2"><span class="g"># messages from the Pi agent and flight controller</span></div>
+        </div>
+      </div>
+      <div class="side" style="top:86px">
+        <div class="card">
+          <h3>Model on the drone</h3>
+          <div id="conModel"></div>
+        </div>
+        <div class="card">
+          <h3>Survey mission</h3>
+          <p class="sub">24 member fields · lawnmower path · 40 m altitude · 75% image overlap</p>
+          <div style="margin-top:14px">
+            <div class="prog"><div id="sBar"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:5px"><span id="sText">Not started</span><span id="sPct">0%</span></div>
+          </div>
+          <div class="kv" style="margin-top:8px"><span>Images captured</span><b id="sImg" class="mono">0</b></div>
+          <div class="kv"><span>Current field</span><b id="sField">—</b></div>
+          <div class="kv"><span>Fields flagged for inspection</span><b id="sFlag">0</b></div>
+          <div class="kv"><span>Pi 5 CPU / temp</span><b id="sCpu">—</b></div>
+          <button class="btn block" id="surveyBtn" style="margin-top:14px">Start survey</button>
+          <a class="btn ghost block" id="toDash" href="#dashboard" style="margin-top:10px;display:none">Open the forecast →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= DASHBOARD ======================= -->
+<div class="page" id="p-dashboard">
+  <div class="wrap">
+    <div class="ph dbar">
+      <div>
+        <p class="eyebrow">Step 3 · Forecast Dashboard</p>
+        <h1 id="dTitle">Supply forecast</h1>
+        <p id="dSub">—</p>
+      </div>
+      <div class="ctl">
+        <div><label class="l" for="cropSel">Crop</label><select id="cropSel" style="width:190px"></select></div>
+      </div>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <div class="dgrid">
+      <div class="card mapwrap">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
+          <h3>Field map · predicted yield per acre</h3><span class="note">Click a field for its report</span>
+        </div>
+        <svg id="dMap" viewBox="0 0 640 420" style="margin-top:10px" aria-label="Map of member fields coloured by predicted yield per acre"></svg>
+        <div class="legend"><span>Lower</span><span class="grad"></span><span>Higher yield / acre</span><span style="display:flex;align-items:center;gap:6px"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" fill="none" stroke="#A5621A" stroke-width="2.5" stroke-dasharray="4 3"/></svg>Flagged for inspection</span></div>
+      </div>
+      <div class="card fdetail" id="fDetail"></div>
+    </div>
+
+    <div class="dgrid">
+      <div class="card fan">
+        <h3>FPO supply over the harvest season</h3>
+        <p class="sub">Cumulative marketable supply (<span id="fanGrade">Grade A+B</span>) (line) with its 90% forecast range (shaded), against the buyer requirement set below.</p>
+        <svg id="fanSvg" viewBox="0 0 640 300" style="margin-top:10px" aria-label="Cumulative supply forecast with range"></svg>
+      </div>
+      <div class="card">
+        <h3>Expected grade distribution</h3>
+        <p class="sub">Share of total predicted harvest, all fields.</p>
+        <div class="gradebar" id="gradeBar"></div>
+        <div class="gl"><span><i style="background:#1F7A4D"></i>Grade A</span><span><i style="background:#5BAE7E"></i>Grade B</span><span><i style="background:#C98A2B"></i>Grade C</span><span><i style="background:#B23A2E"></i>Not marketable</span></div>
+        <div id="gradeKv" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <h3>Contract feasibility check</h3>
+      <p class="sub">Enter a buyer’s requirement. FPOCAST compares it with the forecast and gives the chance of falling short. The FPO board makes the final call.</p>
+      <div class="calc">
+        <div><label class="l" for="reqQty">Quantity required: <span id="reqQtyLbl" class="mono"></span></label><input type="range" id="reqQty"></div>
+        <div><label class="l" for="reqGrade">Minimum grade</label><select id="reqGrade"><option value="A">Grade A only</option><option value="AB" selected>Grade A + B</option><option value="ABC">Any marketable (A + B + C)</option></select></div>
+        <div><label class="l" for="reqWeek">Deliver by</label><select id="reqWeek"></select></div>
+      </div>
+      <div class="result" id="calcRes"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <h3>Buyer requests</h3>
+      <p class="sub" style="margin-bottom:14px">Each request checked against the forecast on its own.</p>
+      <div style="overflow-x:auto"><table class="t" id="buyerTbl"></table></div>
+    </div>
+
+    <div class="card" style="margin-bottom:50px">
+      <h3>All fields</h3>
+      <p class="sub" style="margin-bottom:14px">Field-level forecasts that add up to the FPO total.</p>
+      <div class="ftable"><table class="t" id="fieldTbl"></table></div>
+      <p class="note" style="margin-top:12px">All figures on this page are simulated for the demo. Real forecasts need the pilot crop’s trained models and ground-truth harvest data.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>FPOCAST 2.0 · Tech4Bharat PS 6.4 · Cambridge Institute of Technology, Bengaluru</span>
+    <span>Demo website: server, drone and data are simulated in your browser. Figures are illustrative.</span>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   FPOCAST 2.0 demo – everything below is simulated in-browser
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const fmt = (n, d=0) => Number(n).toLocaleString('en-IN', {minimumFractionDigits:d, maximumFractionDigits:d});
+
+// ---------- seeded random ----------
+function hashStr(s){ let h=2166136261; for(const c of s){ h^=c.charCodeAt(0); h=Math.imul(h,16777619);} return h>>>0; }
+function rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+// ---------- normal distribution ----------
+function erf(x){ const s=Math.sign(x); x=Math.abs(x); const t=1/(1+0.3275911*x);
+  const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x); return s*y; }
+const Phi = z => 0.5*(1+erf(z/Math.SQRT2));
+const Z90 = 1.645, RHO = 0.3;   // 90% range; correlation between nearby farms (shared weather)
+
+// ---------- crops & models ----------
+const CROPS = [
+  {id:'potato_v1', crop:'Potato', icon:'🥔', bg:'#F3E9DC', task:'Plant count · canopy cover · weed patches', classes:'plant, canopy gap, weed patch', size:6.4, ver:'1.0.0', inf:142, base:9.5, unit:'t', start:'2027-02-08', buyers:[['Chips processor','A'],['Institutional kitchen','AB'],['Retail chain DC','AB']]},
+  {id:'tomato_v1', crop:'Tomato', icon:'🍅', bg:'#FBE5E1', task:'Plant count · fruit set · canopy cover', classes:'plant, fruit cluster, canopy gap', size:6.6, ver:'1.0.0', inf:151, base:9.0, unit:'t', start:'2027-01-25', buyers:[['Puree processor','ABC'],['Retail chain DC','A'],['Wholesale trader','AB']]},
+  {id:'onion_v1',  crop:'Onion',  icon:'🧅', bg:'#F1E6F2', task:'Stand count · canopy cover · stress zones', classes:'plant, canopy gap, stress zone', size:6.3, ver:'1.0.0', inf:139, base:6.5, unit:'t', start:'2027-03-01', buyers:[['Dehydration unit','AB'],['Export packer','A'],['Price-stabilisation buyer','ABC']]},
+  {id:'paddy_v1',  crop:'Paddy',  icon:'🌾', bg:'#F5F0D8', task:'Canopy cover · lodging · stress zones', classes:'canopy, lodging, stress zone', size:6.8, ver:'0.9.0', inf:158, base:1.7, unit:'t', start:'2026-12-07', buyers:[['Rice mill','AB'],['Institutional buyer','ABC'],['Seed company','A']]},
+];
+const FARMERS = ['Ramesh Gowda','Lakshmi Devi','Suresh Patil','Anitha Reddy','Manjunath K','Savitha Naik','Basavaraj H','Geetha Rao','Prakash Shetty','Kavya M','Nagaraj B','Sunita Bai','Harish Kumar','Rekha S','Venkatesh P','Shobha N','Mahesh Hegde','Pushpa R','Ravi Shankar','Asha Kulkarni','Gopal Swamy','Meena T','Shivakumar D','Parvathi L'];
+
+// ---------- simulated field data ----------
+function genFields(c){
+  const r = rng(hashStr(c.id));
+  const out = [];
+  for(let i=0;i<24;i++){
+    const col=i%6, row=Math.floor(i/6);
+    const x=20+col*102, y=18+row*98, w=96, h=92;
+    const j=()=> (r()-.5)*12;
+    const pts=[[x+j()+3,y+j()+3],[x+w+j()-3,y+j()+3],[x+w+j()-3,y+h+j()-3],[x+j()+3,y+h+j()-3]];
+    const area=Math.round((1.2+r()*3.3)*10)/10;
+    let cond=0.6+r()*0.35; if(r()<0.14) cond-=0.22;
+    const ypa=c.base*(0.62+0.55*cond)*(0.93+r()*0.14);
+    const mean=area*ypa;
+    const sd=mean*(0.07+(1-cond)*0.16);
+    let A=Math.max(.15,Math.min(.75,0.2+0.75*(cond-0.45)+(r()-.5)*.08));
+    const rej=Math.max(.03,Math.min(.25,0.03+(1-cond)*0.22));
+    const rest=1-A-rej, B=rest*0.62, C=rest*0.38;
+    const hDay=Math.round(r()*30-(cond-0.75)*12);
+    out.push({id:'F'+String(i+1).padStart(2,'0'), farmer:FARMERS[i], pts, cx:x+w/2, cy:y+h/2, area, cond, ypa, mean, sd, A, B, C, rej, hDay, flag:cond<0.58});
+  }
+  return out;
+}
+function share(f, g){ return g==='A'?f.A : g==='AB'?f.A+f.B : f.A+f.B+f.C; }
+// FPO total with correlated risk: var = (1-ρ)Σσ² + ρ(Σσ)²
+function aggregate(fields, g, maxDay=Infinity){
+  let m=0, s2=0, s1=0;
+  for(const f of fields){ if(f.hDay>maxDay) continue; const k=share(f,g); m+=f.mean*k; s2+=(f.sd*k)**2; s1+=f.sd*k; }
+  const sd=Math.sqrt((1-RHO)*s2+RHO*s1*s1);
+  return {mean:m, sd, lo:Math.max(0,m-Z90*sd), hi:m+Z90*sd};
+}
+function risk(req, agg){
+  if(agg.sd===0) return {p: req>agg.mean?1:0};
+  return {p: Phi((req-agg.mean)/agg.sd)};
+}
+function riskLabel(p){ return p<0.10?['Low risk','b-low'] : p<0.35?['Moderate risk','b-mod'] : ['High risk','b-high']; }
+const addDays=(iso,d)=>{ const t=new Date(iso+'T00:00:00'); t.setDate(t.getDate()+d); return t; };
+const dstr=d=>d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+const gName={A:'Grade A only',AB:'Grade A + B',ABC:'Any marketable'};
+
+const DATA = {}; CROPS.forEach(c=>DATA[c.id]=genFields(c));
+
+// ---------- shared app state ----------
+const S = { connected:false, ip:'', selected:null, loaded:null, loading:false,
+            survey:{state:'idle', t:0}, surveyed:{}, dashCrop:'potato_v1', field:null,
+            bat:94, flying:false };
+
+// ---------- logs ----------
+function log(id, html){ const el=$(id); el.insertAdjacentHTML('beforeend','<br>'+html); el.scrollTop=el.scrollHeight; }
+
+// ---------- routing ----------
+const PAGES=['home','selector','console','dashboard'];
+function route(){
+  let p=(location.hash||'#home').slice(1); if(!PAGES.includes(p)) p='home';
+  PAGES.forEach(x=>$('p-'+x).classList.toggle('on',x===p));
+  document.querySelectorAll('.links a').forEach(a=>a.classList.toggle('on',a.dataset.p===p));
+  $('links').classList.remove('open');
+  window.scrollTo(0,0);
+  if(p==='dashboard') renderDash();
+  if(p==='console') renderConsole();
+}
+window.addEventListener('hashchange',route);
+$('burger').onclick=()=>$('links').classList.toggle('open');
+
+function updateGlobal(){
+  $('gDot').className='dot '+(S.connected?'ok':'');
+  $('gDrone').textContent=S.connected?'Drone online':'Drone not connected';
+  $('gModel').textContent=S.loaded?S.loaded.crop+' v'+S.loaded.ver:'none';
+}
+
+// ---------- map drawing ----------
+function lerpColor(a,b,t){ const pa=a.match(/\w\w/g).map(h=>parseInt(h,16)), pb=b.match(/\w\w/g).map(h=>parseInt(h,16));
+  return '#'+pa.map((v,i)=>Math.round(v+(pb[i]-v)*t).toString(16).padStart(2,'0')).join(''); }
+function drawMap(svg, fields, o={}){
+  const ys=fields.map(f=>f.ypa), lo=Math.min(...ys), hi=Math.max(...ys);
+  let s=`<rect width="640" height="420" fill="${o.dark?'#0F2418':'#F3F1EA'}"/>`;
+  s+=`<path d="M0 214 L640 210" stroke="${o.dark?'#2A4A36':'#E2DCCB'}" stroke-width="6"/><path d="M325 0 L322 420" stroke="${o.dark?'#2A4A36':'#E2DCCB'}" stroke-width="5"/>`;
+  for(const f of fields){
+    const t=(f.ypa-lo)/(hi-lo||1);
+    let fill = o.color ? lerpColor('E6F0E1','1F7A4D',t) : (o.dark?'#1B3A27':'#DCE8D8');
+    if(o.scanned && o.scanned.has(f.id)) fill=o.dark?'#2E6B47':fill;
+    const sel = o.selected===f.id;
+    const stroke = f.flag && o.flags ? '#A5621A' : (o.dark?'#2F5A40':'#B9CBB9');
+    s+=`<polygon class="fp" data-id="${f.id}" points="${f.pts.map(p=>p.join(',')).join(' ')}" fill="${fill}" stroke="${sel?'#14301F':stroke}" stroke-width="${sel?4:(f.flag&&o.flags?2.5:1.5)}" ${f.flag&&o.flags&&!sel?'stroke-dasharray="6 4"':''} style="cursor:${o.click?'pointer':'default'}"/>`;
+    if(o.labels!==false) s+=`<text x="${f.cx}" y="${f.cy+5}" text-anchor="middle" font-size="14" font-family="DM Sans" font-weight="700" fill="${o.color&&t>0.55?'#F6F3EC':(o.dark?'#7FA38D':'#4A5D50')}" pointer-events="none">${f.id}</text>`;
+  }
+  if(o.path) s+=o.path;
+  svg.innerHTML=s;
+  if(o.click) svg.querySelectorAll('.fp').forEach(p=>p.addEventListener('click',()=>o.click(p.dataset.id)));
+}
+
+// lawnmower survey path: two passes per row of fields
+const PATH=[]; (function(){ for(let r=0;r<4;r++){ const y1=18+r*98+28, y2=18+r*98+68; const L=14, R=626;
+  PATH.push([L,y1],[R,y1],[R,y2],[L,y2]); } })();
+const SEG=[]; let PLEN=0; for(let i=1;i<PATH.length;i++){ const d=Math.hypot(PATH[i][0]-PATH[i-1][0],PATH[i][1]-PATH[i-1][1]); SEG.push(d); PLEN+=d; }
+function posAt(t){ let d=t*PLEN; for(let i=0;i<SEG.length;i++){ if(d<=SEG[i]){ const a=PATH[i],b=PATH[i+1],k=d/SEG[i]; return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k, i]; } d-=SEG[i]; } const e=PATH[PATH.length-1]; return [e[0],e[1],SEG.length-1]; }
+function trail(t){ const pts=[PATH[0]]; let d=t*PLEN; for(let i=0;i<SEG.length;i++){ if(d<=SEG[i]){ pts.push(posAt(t)); break; } pts.push(PATH[i+1]); d-=SEG[i]; } return pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' '); }
+function fieldAt(x,y,fields){ return fields.find(f=>x>=f.pts[0][0]-4&&x<=f.pts[1][0]+4&&y>=f.pts[0][1]-4&&y<=f.pts[2][1]+4); }
+function droneSvg(x,y){ return `<g transform="translate(${x},${y})"><circle r="16" fill="#A9D9BB" opacity=".25"/><circle r="7" fill="#F6F3EC" stroke="#1F7A4D" stroke-width="3"/><path d="M-13 -13 L13 13 M13 -13 L-13 13" stroke="#F6F3EC" stroke-width="2" opacity=".8"/></g>`; }
+
+// hero map animation
+let heroT=0;
+function heroTick(){
+  heroT=(heroT+0.0016)%1;
+  if($('p-home').classList.contains('on')){
+    const [x,y]=posAt(heroT);
+    drawMap($('heroMap'), DATA.potato_v1, {dark:true, labels:false,
+      path:`<polyline points="${trail(heroT)}" fill="none" stroke="#A9D9BB" stroke-width="2" stroke-dasharray="5 5" opacity=".7"/>${droneSvg(x,y)}`});
+  }
+  requestAnimationFrame(heroTick);
+}
+
+/* ======================= SELECTOR ======================= */
+function renderModels(){
+  $('modelList').innerHTML = CROPS.map(m=>`
+    <div class="model ${S.connected?'':'dis'} ${S.selected&&S.selected.id===m.id?'sel':''} ${S.loaded&&S.loaded.id===m.id?'loaded':''}" data-id="${m.id}">
+      <span class="loadedtag">ON DRONE</span>
+      <div class="top"><div class="ic" style="background:${m.bg}">${m.icon}</div>
+        <div><h3>${m.crop}</h3><div class="task">${m.task}</div></div></div>
+      <div class="specs">
+        <div><small>Model</small>YOLOv8n-seg</div>
+        <div><small>Size</small>${m.size} MB</div>
+        <div><small>Version</small>v${m.ver}</div>
+      </div>
+      <div class="cls"><b>Detects:</b> ${m.classes}</div>
+      <div class="cls note">Accuracy: measured after pilot training</div>
+    </div>`).join('');
+  document.querySelectorAll('.model').forEach(el=>el.onclick=()=>{
+    if(S.loading) return;
+    S.selected=CROPS.find(c=>c.id===el.dataset.id); renderModels();
+    $('selName').textContent=S.selected.icon+' '+S.selected.crop+' · YOLOv8n-seg · '+S.selected.size+' MB';
+    $('loadBtn').disabled=false; $('loadBtn').textContent='Load '+S.selected.crop+' model onto drone';
+  });
+}
+
+$('connectBtn').onclick = async ()=>{
+  const ip=$('ip').value.trim();
+  if(!/^[\w.\-]+(:\d+)?$/.test(ip)){ $('ipErr').textContent='Enter an address like 192.168.4.1:8000'; $('ipErr').style.display='block'; return; }
+  $('ipErr').style.display='none'; S.ip=ip;
+  $('connectBtn').disabled=true; $('connectBtn').textContent='Connecting…';
+  $('cSrv').innerHTML='<i class="dot wait"></i>Checking'; $('cPi').innerHTML='<i class="dot wait"></i>Checking';
+  log('log1','<span class="m">GET</span> http://'+ip+'/status');
+  await sleep(700);
+  log('log1','← 200 {"server":"online","pi":{"online":true,"stage":"idle"}}');
+  $('cSrv').innerHTML='<i class="dot ok"></i>Online';
+  await sleep(250);
+  $('cPi').innerHTML='<i class="dot ok"></i>Online'; $('cGps').textContent='3D fix · 14'; $('cBat').textContent=S.bat+'%';
+  S.connected=true; updateGlobal();
+  $('connectBtn').textContent='Connected ✓';
+  log('log1','<span class="m">GET</span> /models'); await sleep(350);
+  log('log1','← 200 ['+CROPS.length+' models]');
+  $('modelsNote').innerHTML=CROPS.length+' models found. Pick the crop you are surveying today.';
+  renderModels();
+  log('log2','<span class="y">link</span> ground server connected, Wi-Fi RSSI −58 dBm');
+};
+
+const ORDER=['s1','s2','s3','s4'];
+$('loadBtn').onclick = async ()=>{
+  const m=S.selected; if(!m||S.loading) return;
+  if(S.survey.state==='running'){ $('stageText').textContent='Finish the survey before changing models'; return; }
+  S.loading=true; $('loadBtn').disabled=true; $('readyBox').style.display='none';
+  document.querySelectorAll('.model').forEach(x=>x.classList.add('dis'));
+  ORDER.forEach(s=>{ $(s).className='stage'; $(s).querySelector('.s').textContent=''; });
+  const t0=performance.now();
+  log('log1','<span class="m">POST</span> /models/load {"model_id":"'+m.id+'"}'); await sleep(200);
+  log('log1','← 202 {"job":"accepted"}');
+  const run=async(id,from,to,ms,label,msg)=>{
+    $(id).className='stage run'; $('stageText').textContent=label;
+    for(let i=1;i<=14;i++){ await sleep(ms/14); const p=Math.round(from+(to-from)*i/14); $('bar').style.width=p+'%'; $('pct').textContent=p+'%'; }
+    $(id).className='stage done'; $(id).querySelector('.s').textContent='✓'; if(msg) log('log1',msg);
+  };
+  await run('s1',0,60,1500,'Sending to Pi…','<span class="g">pi:</span> received '+m.id+'.onnx ('+m.size+' MB)');
+  await run('s2',60,70,450,'Verifying…','<span class="g">pi:</span> sha256 OK');
+  await run('s3',70,90,800,'Loading…','<span class="g">pi:</span> model loaded (onnxruntime, CPU)');
+  await run('s4',90,100,600,'Test run…','<span class="g">pi:</span> test inference '+m.inf+' ms');
+  log('log1','<span class="m">GET</span> /status → {"loaded_model":"'+m.id+'","stage":"ready"}');
+  S.loaded=m; S.loading=false; S.dashCrop=m.id;
+  $('stageText').textContent='Ready'; $('rName').textContent=m.crop;
+  $('rTime').textContent=((performance.now()-t0)/1000).toFixed(1)+' s'; $('rInf').textContent=m.inf+' ms / image';
+  $('readyBox').style.display='block'; $('loadBtn').textContent='Load '+m.crop+' model onto drone'; $('loadBtn').disabled=false;
+  log('log2','<span class="y">pi</span> model '+m.id+' v'+m.ver+' active');
+  updateGlobal(); renderModels();
+};
+
+/* ======================= CONSOLE ======================= */
+function renderConsole(){
+  const m=S.loaded;
+  $('conModel').innerHTML = m ? `
+    <div style="display:flex;gap:12px;align-items:center;margin:10px 0 6px"><div class="ic" style="width:48px;height:48px;border-radius:12px;background:${m.bg};display:grid;place-items:center;font-size:26px">${m.icon}</div>
+    <div><b style="font-size:18px">${m.crop}</b><div class="note">YOLOv8n-seg · v${m.ver} · ${m.size} MB</div></div></div>
+    <div class="kv"><span>Runs on</span><b>Raspberry Pi 5 (CPU)</b></div>
+    <div class="kv"><span>Inference</span><b>${m.inf} ms / image</b></div>
+    <div class="kv"><span>Status</span><b><i class="dot ok"></i>Ready</b></div>
+    <a class="btn ghost block" href="#selector" style="margin-top:10px">Change model</a>`
+  : `<div class="empty" style="margin-top:10px">No model loaded yet.<br><a class="btn" href="#selector" style="margin-top:12px">Go to Model Selector</a></div>`;
+  $('surveyBtn').disabled = !m || !S.connected || S.survey.state==='running';
+  if(!S.connected) $('surveyBtn').textContent='Connect in Model Selector first';
+  else if(!m) $('surveyBtn').textContent='Load a model first';
+  else if(S.survey.state==='running') $('surveyBtn').textContent='Survey in progress…';
+  else $('surveyBtn').textContent = S.survey.state==='done' ? 'Fly survey again' : 'Start survey';
+  drawConsoleMap();
+}
+function drawConsoleMap(){
+  const fields=DATA[S.loaded?S.loaded.id:'potato_v1'];
+  const t=S.survey.t;
+  const scanned=new Set();
+  if(S.survey.state!=='idle'){ for(let k=0;k<=t;k+=0.004){ const [x,y]=posAt(k); const f=fieldAt(x,y,fields); if(f) scanned.add(f.id);} }
+  const [x,y]=posAt(t);
+  const showDrone = S.survey.state!=='idle' || S.connected;
+  drawMap($('conMap'), fields, {dark:true, scanned, flags:S.survey.state==='done',
+    path:(S.survey.state!=='idle'?`<polyline points="${trail(t)}" fill="none" stroke="#A9D9BB" stroke-width="2.5" opacity=".85"/>`:'')+(showDrone?droneSvg(x,y):'')});
+}
+function setTele(fly){
+  const jit=(a,b)=>a+Math.random()*(b-a);
+  $('tMode').textContent = S.connected ? (fly?'AUTO':'LOITER') : '—';
+  $('tBat').textContent = S.connected ? Math.round(S.bat)+'%' : '—';
+  $('tVolt').textContent = S.connected ? (21.0+S.bat/100*4.2).toFixed(1)+' V (6S)' : '';
+  $('tGps').textContent = S.connected ? Math.round(jit(13,16))+' sats' : '—';
+  $('tHdop').textContent = S.connected ? 'HDOP '+jit(0.7,0.9).toFixed(2) : '';
+  $('tAlt').textContent = S.connected ? (fly?jit(39.6,40.4).toFixed(1):'0.0')+' m' : '—';
+  $('tSpd').textContent = S.connected ? (fly?jit(4.8,5.2).toFixed(1):'0.0')+' m/s' : '';
+  $('sCpu').textContent = S.connected ? (fly?Math.round(jit(58,71)):Math.round(jit(6,12)))+'% · '+(fly?jit(56,61):jit(44,47)).toFixed(0)+'°C' : '—';
+}
+setInterval(()=>setTele(S.survey.state==='running'),700);
+
+$('surveyBtn').onclick = async ()=>{
+  const m=S.loaded; if(!m) return;
+  const fields=DATA[m.id];
+  S.survey={state:'running',t:0}; $('toDash').style.display='none'; renderConsole();
+  log('log2','<span class="y">fc</span> mode AUTO · mission uploaded (lawnmower, 40 m, 75% overlap)');
+  log('log2','<span class="y">fc</span> takeoff → 40 m');
+  const seen=new Set(); let img=0, flagged=0; const dur=16000, t0=performance.now();
+  while(true){
+    const t=Math.min(1,(performance.now()-t0)/dur); S.survey.t=t;
+    const [x,y]=posAt(t); const f=fieldAt(x,y,fields);
+    img=Math.floor(t*412);
+    $('sImg').textContent=img; $('sBar').style.width=(t*100)+'%'; $('sPct').textContent=Math.round(t*100)+'%';
+    $('sText').textContent='Surveying…'; S.bat=94-t*31;
+    if(f){ $('sField').textContent=f.id+' · '+f.farmer; $('hud').textContent='Over '+f.id+' · '+img+' images';
+      if(!seen.has(f.id)){ seen.add(f.id);
+        const cover=Math.round(55+f.cond*45);
+        log('log2',`<span class="g">pi</span> ${f.id}: canopy cover ${cover}%`+(f.flag?` <span class="e">· low-vigour zone, flagged</span>`:''));
+        if(f.flag){ flagged++; $('sFlag').textContent=flagged; }
+      } }
+    drawConsoleMap();
+    if(t>=1) break; await sleep(60);
+  }
+  log('log2','<span class="y">fc</span> mission complete · RTL · landed');
+  log('log2','<span class="y">link</span> uploading 412 images + detections to ground server… done');
+  log('log2','<span class="m">server</span> forecasts updated for '+m.crop+' (24 fields)');
+  S.survey.state='done'; S.surveyed[m.id]=new Date(); S.dashCrop=m.id;
+  $('sText').textContent='Complete · data uploaded'; $('hud').textContent='Survey complete · 412 images';
+  $('toDash').style.display='flex'; renderConsole();
+};
+
+/* ======================= DASHBOARD ======================= */
+$('cropSel').innerHTML = CROPS.map(c=>`<option value="${c.id}">${c.icon} ${c.crop}</option>`).join('');
+$('cropSel').onchange = ()=>{ S.dashCrop=$('cropSel').value; S.field=null; setupCalc(true); renderDash(); };
+['reqQty','reqGrade','reqWeek'].forEach(id=>$(id).addEventListener('input',()=>{ renderCalc(); renderFan(); }));
+
+function crop(){ return CROPS.find(c=>c.id===S.dashCrop); }
+let calcFor=null;
+function setupCalc(force){
+  const c=crop(), fields=DATA[c.id];
+  if(calcFor===c.id && !force) return; calcFor=c.id;
+  const tot=aggregate(fields,'ABC');
+  const step=c.base<3?1:5;
+  $('reqQty').min=0; $('reqQty').max=Math.ceil(tot.hi*1.1/step)*step; $('reqQty').step=step;
+  $('reqQty').value=Math.round(aggregate(fields,'AB',4*7-1).mean*0.95/step)*step;
+  $('reqWeek').innerHTML=[1,2,3,4,5].map(w=>`<option value="${w}" ${w===4?'selected':''}>Week ${w} · by ${dstr(addDays(c.start,w*7-1))}</option>`).join('');
+}
+function renderDash(){
+  const c=crop(), fields=DATA[c.id];
+  $('cropSel').value=c.id; setupCalc();
+  $('dTitle').textContent=c.crop+' supply forecast · 24 member fields';
+  const when=S.surveyed[c.id];
+  $('dSub').innerHTML = when ? `<b style="color:var(--leaf)">Updated from the survey you just flew</b> (${when.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}). Model: ${c.crop} YOLOv8n-seg v${c.ver}.`
+                             : `Showing the previous survey (simulated). Fly a new one from the Drone Console to refresh it.`;
+  const area=fields.reduce((a,f)=>a+f.area,0);
+  const tot=aggregate(fields,'ABC'), all={mean:fields.reduce((a,f)=>a+f.mean,0)};
+  const mk=aggregate(fields,'AB');
+  const days=fields.map(f=>f.hDay); const d0=addDays(c.start,Math.min(...days)), d1=addDays(c.start,Math.max(...days));
+  const flagged=fields.filter(f=>f.flag).length;
+  $('kpis').innerHTML=`
+    <div class="kpi"><small>Fields mapped</small><b>24</b><i>${fmt(area,1)} acres · ${flagged} flagged</i></div>
+    <div class="kpi"><small>Total harvest</small><b>${fmt(all.mean)} t</b><i>all grades incl. rejects</i></div>
+    <div class="kpi"><small>Marketable (A+B)</small><b>${fmt(mk.mean)} t</b><i>90% range ${fmt(mk.lo)}–${fmt(mk.hi)} t</i></div>
+    <div class="kpi"><small>Any marketable</small><b>${fmt(tot.mean)} t</b><i>90% range ${fmt(tot.lo)}–${fmt(tot.hi)} t</i></div>
+    <div class="kpi"><small>Harvest window</small><b>${dstr(d0)}</b><i>to ${dstr(d1)}</i></div>`;
+  renderDashMap(); renderFieldDetail(); renderGrades(); renderFan(); renderCalc(); renderBuyers(); renderFieldTable();
+}
+function renderDashMap(){ drawMap($('dMap'), DATA[S.dashCrop], {color:true, flags:true, selected:S.field, click:id=>{S.field=id; renderDashMap(); renderFieldDetail(); renderFieldTable();}}); }
+function renderFieldDetail(){
+  const c=crop(), fields=DATA[c.id];
+  if(!S.field){
+    const worst=[...fields].sort((a,b)=>a.cond-b.cond).slice(0,3);
+    $('fDetail').innerHTML=`<p class="eyebrow">Field report</p><h3 style="margin:6px 0 4px">Select a field on the map</h3>
+      <p class="sub">Each field gets its own forecast: yield range, grade mix and harvest window.</p>
+      <p style="margin:18px 0 8px;font-weight:700">Lowest canopy cover</p>
+      ${worst.map(f=>`<div class="kv" style="cursor:pointer" onclick="S.field='${f.id}';renderDashMap();renderFieldDetail();renderFieldTable()"><span>${f.id} · ${f.farmer}</span><b class="${f.flag?'flag':''}">canopy ${Math.round(55+f.cond*45)}%${f.flag?' · inspect':''}</b></div>`).join('')}`;
+    return;
+  }
+  const f=fields.find(x=>x.id===S.field);
+  const lo=Math.max(0,f.mean-Z90*f.sd), hi=f.mean+Z90*f.sd;
+  const h0=addDays(c.start,f.hDay-3), h1=addDays(c.start,f.hDay+4);
+  $('fDetail').innerHTML=`<p class="eyebrow">Field report</p>
+    <h3 style="margin:6px 0 2px">${f.id} · ${f.farmer}</h3>
+    <p class="sub">${c.crop} · ${f.area} acres ${f.flag?'· <span class="flag">flagged for inspection</span>':''}</p>
+    <div style="margin-top:12px">
+      <div class="kv"><span>Canopy cover (crop vision)</span><b>${Math.round(55+f.cond*45)}%</b></div>
+      <div class="kv"><span>Predicted yield</span><b>${fmt(f.ypa,1)} t / acre</b></div>
+      <div class="kv"><span>Expected production</span><b>${fmt(f.mean,1)} t</b></div>
+      <div class="kv"><span>90% range</span><b>${fmt(lo,1)} – ${fmt(hi,1)} t</b></div>
+      <div class="kv"><span>Marketable A+B</span><b>${fmt(f.mean*(f.A+f.B),1)} t</b></div>
+      <div class="kv"><span>Grade mix A / B / C / reject</span><b class="mono" style="font-size:13px">${[f.A,f.B,f.C,f.rej].map(v=>Math.round(v*100)).join(' / ')}%</b></div>
+      <div class="kv"><span>Harvest window</span><b>${dstr(h0)} – ${dstr(h1)}</b></div>
+    </div>
+    <button class="btn ghost" style="margin-top:12px" onclick="S.field=null;renderDashMap();renderFieldDetail();renderFieldTable()">Clear selection</button>`;
+}
+function renderGrades(){
+  const fields=DATA[S.dashCrop]; const tot=fields.reduce((a,f)=>a+f.mean,0);
+  const g={A:0,B:0,C:0,R:0}; fields.forEach(f=>{g.A+=f.mean*f.A; g.B+=f.mean*f.B; g.C+=f.mean*f.C; g.R+=f.mean*f.rej;});
+  const cols={A:'#1F7A4D',B:'#5BAE7E',C:'#C98A2B',R:'#B23A2E'}, names={A:'Grade A',B:'Grade B',C:'Grade C',R:'Not marketable'};
+  $('gradeBar').innerHTML=Object.keys(g).map(k=>`<div style="width:${g[k]/tot*100}%;background:${cols[k]}">${Math.round(g[k]/tot*100)}%</div>`).join('');
+  $('gradeKv').innerHTML=Object.keys(g).map(k=>`<div class="kv"><span>${names[k]}</span><b>${fmt(g[k])} t</b></div>`).join('');
+}
+function renderFan(){
+  const c=crop(), fields=DATA[c.id], g=$('reqGrade').value, req=+$('reqQty').value, wk=+$('reqWeek').value;
+  $('fanGrade').textContent=gName[g];
+  const W=640,H=300,L=56,R=20,T=18,B=40, weeks=5;
+  const pts=[]; for(let w=0;w<=weeks;w++){ pts.push(aggregate(fields,g,w*7-1)); }
+  const raw=Math.max(pts[weeks].hi, req)*1.08, mag=Math.pow(10,Math.floor(Math.log10(raw/4))), stp=[1,2,2.5,5,10].map(k=>k*mag).find(v=>v*4>=raw), ymax=stp*4;
+  const X=w=>L+(W-L-R)*w/weeks, Y=v=>T+(H-T-B)*(1-v/ymax);
+  let s='';
+  for(let i=0;i<=4;i++){ const v=ymax*i/4; s+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#EEF2EF"/><text x="${L-8}" y="${Y(v)+4}" text-anchor="end" font-size="12" fill="#6E8075" font-family="DM Sans">${fmt(v)}</text>`; }
+  for(let w=0;w<=weeks;w++) s+=`<text x="${X(w)}" y="${H-14}" text-anchor="middle" font-size="12" fill="#6E8075" font-family="DM Sans">${w===0?'start':'wk '+w}</text>`;
+  s+=`<text x="14" y="${T+8}" font-size="12" fill="#6E8075" font-family="DM Sans">t</text>`;
+  const up=pts.map((p,w)=>`${X(w)},${Y(p.hi)}`).join(' '), dn=pts.map((p,w)=>`${X(w)},${Y(p.lo)}`).reverse().join(' ');
+  s+=`<polygon points="${up} ${dn}" fill="#2E9A63" opacity=".18"/>`;
+  s+=`<polyline points="${pts.map((p,w)=>`${X(w)},${Y(p.mean)}`).join(' ')}" fill="none" stroke="#1F7A4D" stroke-width="3"/>`;
+  pts.forEach((p,w)=>{ s+=`<circle cx="${X(w)}" cy="${Y(p.mean)}" r="3.5" fill="#1F7A4D"/>`; });
+  s+=`<line x1="${X(wk)}" x2="${X(wk)}" y1="${T}" y2="${H-B}" stroke="#A5621A" stroke-width="1.5" stroke-dasharray="4 4"/>`;
+  s+=`<line x1="${L}" x2="${W-R}" y1="${Y(req)}" y2="${Y(req)}" stroke="#A5621A" stroke-width="2.5" stroke-dasharray="8 5"/>`;
+  s+=`<text x="${L+8}" y="${Y(req)-8}" font-size="13" font-weight="700" fill="#A5621A" font-family="DM Sans">buyer needs ${fmt(req)} t by week ${wk}</text>`;
+  $('fanSvg').innerHTML=s;
+}
+function renderCalc(){
+  const c=crop(), fields=DATA[c.id], req=+$('reqQty').value, g=$('reqGrade').value, wk=+$('reqWeek').value;
+  $('reqQtyLbl').textContent=fmt(req)+' t';
+  const agg=aggregate(fields,g,wk*7-1), {p}=risk(req,agg), [lbl,cls]=riskLabel(p);
+  const gap=req-agg.mean;
+  $('calcRes').innerHTML=`
+    <div><small>Forecast available</small><b>${fmt(agg.mean)} t</b><div class="note">90% range ${fmt(agg.lo)}–${fmt(agg.hi)} t</div></div>
+    <div><small>${gap>0?'Expected gap':'Expected surplus'}</small><b style="color:${gap>0?'#8E2A20':'#17603c'}">${fmt(Math.abs(gap))} t</b><div class="note">${gap>0?'short of':'above'} the requirement</div></div>
+    <div><small>Chance of falling short</small><b>${Math.round(p*100)}%</b><div class="note">uses correlated farm risk</div></div>
+    <div><small>Assessment</small><b><span class="badge ${cls}" style="font-size:15px">${lbl}</span></b><div class="note">${p<0.10?'Safe to commit':p<0.35?'Commit with a buffer':'Reduce quantity or add suppliers'}</div></div>`;
+}
+function renderBuyers(){
+  const c=crop(), fields=DATA[c.id], step=c.base<3?1:5;
+  const mult=[0.55,0.95,1.08], weeks=[5,4,3];
+  const rows=c.buyers.map(([name,g],i)=>{
+    const agg=aggregate(fields,g,weeks[i]*7-1);
+    const req=Math.max(step,Math.round(agg.mean*mult[i]/step)*step);
+    const {p}=risk(req,agg), [lbl,cls]=riskLabel(p);
+    return `<tr><td><b>${name}</b></td><td>${fmt(req)} t</td><td>${gName[g]}</td><td>${dstr(addDays(c.start,weeks[i]*7-1))}</td><td>${fmt(agg.mean)} t <span class="note">(${fmt(agg.lo)}–${fmt(agg.hi)})</span></td><td>${Math.round(p*100)}%</td><td><span class="badge ${cls}">${lbl}</span></td></tr>`;
+  });
+  $('buyerTbl').innerHTML=`<tr><th>Buyer</th><th>Quantity</th><th>Grade</th><th>Deliver by</th><th>Forecast available</th><th>Chance short</th><th>Assessment</th></tr>`+rows.join('');
+}
+function renderFieldTable(){
+  const c=crop(), fields=DATA[c.id];
+  $('fieldTbl').innerHTML=`<tr><th>Field</th><th>Farmer</th><th>Area</th><th>Canopy</th><th>Expected</th><th>90% range</th><th>Grade A</th><th>Harvest</th><th></th></tr>`+
+    fields.map(f=>`<tr class="${S.field===f.id?'selr':''}" onclick="S.field='${f.id}';renderDashMap();renderFieldDetail();renderFieldTable();document.getElementById('dMap').scrollIntoView({behavior:'smooth',block:'center'})">
+      <td class="mono"><b>${f.id}</b></td><td>${f.farmer}</td><td>${f.area} ac</td><td>${Math.round(55+f.cond*45)}%</td><td>${fmt(f.mean,1)} t</td>
+      <td>${fmt(Math.max(0,f.mean-Z90*f.sd),1)}–${fmt(f.mean+Z90*f.sd,1)} t</td><td>${Math.round(f.A*100)}%</td><td>${dstr(addDays(c.start,f.hDay))}</td>
+      <td>${f.flag?'<span class="flag">Inspect</span>':''}</td></tr>`).join('');
+}
+
+// ---------- start ----------
+renderModels(); updateGlobal(); setTele(false); route(); heroTick();
+</script>
+</body>
+</html>
